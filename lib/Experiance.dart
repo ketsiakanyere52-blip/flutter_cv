@@ -98,5 +98,5 @@ class Profile {
   static const adresse = 'Goma, RDC';
   static const linkedin =
       'https://www.linkedin.com/in/ketsia-kanyere-052410407/';
-  static const github = 'https://github.com/votre-pseudo';
+  static const github = 'https://github.com/ketsiakanyere52-blip/flutter_cv';
 }
