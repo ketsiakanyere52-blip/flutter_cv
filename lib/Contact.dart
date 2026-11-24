@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cv/Experiance.dart';
+import 'package:flutter_cv/Service/ApiExeption.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+
 class ContactPage extends StatelessWidget {
-  const ContactPage({super.key});
+  final Future<Etudiant?> etudiant;
+  const ContactPage({super.key, required this.etudiant});
 
   Future<void> _ouvrir(BuildContext context, Uri uri) async {
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
@@ -16,13 +19,23 @@ class ContactPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final contacts =
-        <({IconData icone, String label, String valeur, Uri? uri})>[
+    return FutureBuilder<Etudiant?>(
+      future: etudiant,
+      builder: (context, snap) {
+        final tel = (snap.data?.telephone.isNotEmpty ?? false)
+            ? snap.data!.telephone
+            : Profile.telephone;
+        final adresse = (snap.data?.adresse.isNotEmpty ?? false)
+            ? snap.data!.adresse
+            : Profile.adresse;
+
+        final contacts =
+            <({IconData icone, String label, String valeur, Uri? uri})>[
           (
             icone: Icons.phone,
             label: 'Téléphone',
-            valeur: Profile.telephone,
-            uri: Uri(scheme: 'tel', path: Profile.telephone),
+            valeur: tel,
+            uri: Uri(scheme: 'tel', path: tel),
           ),
           (
             icone: Icons.email,
@@ -33,7 +46,7 @@ class ContactPage extends StatelessWidget {
           (
             icone: Icons.location_on,
             label: 'Adresse',
-            valeur: Profile.adresse,
+            valeur: adresse,
             uri: null,
           ),
           (
@@ -50,23 +63,25 @@ class ContactPage extends StatelessWidget {
           ),
         ];
 
-    return ListView(
-      padding: const EdgeInsets.all(12),
-      children: [
-        for (final c in contacts)
-          Card(
-            child: ListTile(
-              leading: Icon(
-                c.icone,
-                color: Theme.of(context).colorScheme.primary,
+        return ListView(
+          padding: const EdgeInsets.all(12),
+          children: [
+            for (final c in contacts)
+              Card(
+                child: ListTile(
+                  leading: Icon(c.icone,
+                      color: Theme.of(context).colorScheme.primary),
+                  title: Text(c.label),
+                  subtitle: Text(c.valeur),
+                  trailing:
+                      c.uri == null ? null : const Icon(Icons.open_in_new),
+                  onTap:
+                      c.uri == null ? null : () => _ouvrir(context, c.uri!),
+                ),
               ),
-              title: Text(c.label),
-              subtitle: Text(c.valeur),
-              trailing: c.uri == null ? null : const Icon(Icons.open_in_new),
-              onTap: c.uri == null ? null : () => _ouvrir(context, c.uri!),
-            ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

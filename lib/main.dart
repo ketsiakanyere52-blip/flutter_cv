@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_cv/EnregistrerPage.dart';
 import 'package:flutter_cv/Experiance.dart';
 import 'package:flutter_cv/MainShell.dart';
+import 'package:flutter_cv/Service/ApiExeption.dart';
 
 void main() {
   runApp(const MyApp());
@@ -20,6 +22,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -28,29 +31,34 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final formKey = GlobalKey<FormState>();
-  final idController = TextEditingController();
-  final pwdController = TextEditingController();
-  bool masque = true;
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _pwdController = TextEditingController();
+  bool _masque = true;
+  bool _chargement = false;
 
   @override
   void dispose() {
-    idController.dispose();
-    pwdController.dispose();
+    _emailController.dispose();
+    _pwdController.dispose();
     super.dispose();
   }
 
-  void _seConnecter() {
-    if (!formKey.currentState!.validate()) return;
-    if (idController.text.trim() == Profile.identifiant &&
-        pwdController.text == Profile.motDePasse) {
-      Navigator.of(
-        context,
-      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Identifiant ou mot de passe incorrect')),
+  Future<void> _seConnecter() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _chargement = true);
+    try {
+      await ApiService.login(_emailController.text.trim(), _pwdController.text);
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainShell()),
       );
+    } on ApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text(e.message)));
+    } finally {
+      if (mounted) setState(() => _chargement = false);
     }
   }
 
@@ -63,24 +71,23 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
             child: Form(
-              key: formKey,
+              key: _formKey,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(Icons.account_circle, size: 96, color: couleurs.primary),
                   const SizedBox(height: 12),
-                  Text(
-                    'Bienvenue',
-                    style: Theme.of(context).textTheme.headlineMedium,
-                  ),
+                  Text('Bienvenue',
+                      style: Theme.of(context).textTheme.headlineMedium),
                   const SizedBox(height: 4),
                   const Text('Connectez-vous pour voir mon CV'),
                   const SizedBox(height: 32),
                   TextFormField(
-                    controller: idController,
+                    controller: _emailController,
+                    keyboardType: TextInputType.emailAddress,
                     textInputAction: TextInputAction.next,
                     decoration: const InputDecoration(
-                      labelText: 'Identifiant',
+                      labelText: 'Identifiant (e-mail)',
                       prefixIcon: Icon(Icons.person),
                       border: OutlineInputBorder(),
                     ),
@@ -90,8 +97,8 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                   const SizedBox(height: 16),
                   TextFormField(
-                    controller: pwdController,
-                    obscureText: masque,
+                    controller: _pwdController,
+                    obscureText: _masque,
                     onFieldSubmitted: (_) => _seConnecter(),
                     decoration: InputDecoration(
                       labelText: 'Mot de passe',
@@ -99,9 +106,8 @@ class _LoginPageState extends State<LoginPage> {
                       border: const OutlineInputBorder(),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          masque ? Icons.visibility : Icons.visibility_off,
-                        ),
-                        onPressed: () => setState(() => masque = !masque),
+                            _masque ? Icons.visibility : Icons.visibility_off),
+                        onPressed: () => setState(() => _masque = !_masque),
                       ),
                     ),
                     validator: (v) => (v == null || v.isEmpty)
@@ -113,9 +119,21 @@ class _LoginPageState extends State<LoginPage> {
                     width: double.infinity,
                     height: 48,
                     child: FilledButton(
-                      onPressed: _seConnecter,
-                      child: const Text('Se connecter'),
+                      onPressed: _chargement ? null : _seConnecter,
+                      child: _chargement
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Text('Se connecter'),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RegisterPage()),
+                    ),
+                    child: const Text('Créer un compte'),
                   ),
                 ],
               ),

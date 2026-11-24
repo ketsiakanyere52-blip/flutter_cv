@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_cv/Avatar.dart';
 import 'package:flutter_cv/Experiance.dart';
+import 'package:flutter_cv/Service/ApiExeption.dart';
+
+
 
 class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+  final Future<Etudiant?> etudiant;
+  const HomePage({super.key, required this.etudiant});
 
   @override
   Widget build(BuildContext context) {
@@ -13,17 +17,18 @@ class HomePage extends StatelessWidget {
       children: [
         const Center(child: Avatar(asset: Profile.photo, radius: 60)),
         const SizedBox(height: 12),
-        Text(
-          Profile.nom,
-          textAlign: TextAlign.center,
-          style: Theme.of(context).textTheme.headlineSmall,
+        FutureBuilder<Etudiant?>(
+          future: etudiant,
+          builder: (context, snap) => Text(
+            snap.data?.nomComplet ?? Profile.nom,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
         ),
         const SizedBox(height: 4),
-        Text(
-          Profile.titre,
-          textAlign: TextAlign.center,
-          style: TextStyle(color: couleurs.primary),
-        ),
+        Text(Profile.titre,
+            textAlign: TextAlign.center,
+            style: TextStyle(color: couleurs.primary)),
         const SizedBox(height: 12),
         Text(Profile.resume, textAlign: TextAlign.center),
 
@@ -48,9 +53,8 @@ class HomePage extends StatelessWidget {
               ListTile(
                 contentPadding: EdgeInsets.zero,
                 title: Text(e.titre),
-                subtitle: Text(
-                  '${e.organisation} • ${e.periode}\n${e.description}',
-                ),
+                subtitle:
+                    Text('${e.organisation} • ${e.periode}\n${e.description}'),
                 isThreeLine: true,
               ),
           ],
@@ -104,11 +108,8 @@ class _Section extends StatelessWidget {
   final IconData icone;
   final String titre;
   final List<Widget> enfants;
-  const _Section({
-    required this.icone,
-    required this.titre,
-    required this.enfants,
-  });
+  const _Section(
+      {required this.icone, required this.titre, required this.enfants});
 
   @override
   Widget build(BuildContext context) {
